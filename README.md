@@ -50,3 +50,34 @@ CREATE INDEX idx_id ON t_test (id);
 \di+
 ```
 remember indexes are not free, we have to write to all those indexes on INSERT, which seriously slows down the writing.
+
+### Making use of sorted output
+### Using more than one index at a time
+PostgreSQL will go for a bitmap scan.
+
+### Using bitmap scans effectively
+use cases
+- Avoiding using the same block over and over again
+- Combining relatively bad conditions  
+
+__In PostgreSQL 10.0, parallel bitmap heap scans are supported.__
+
+### Improving speed using clustered tables
+```
+EXPLAIN (analyze true, buffers true, timing true)       SELECT *    FROM t_test    WHERE id < 10000; 
+```
+The idea is that analyze will not just show the plan but also execute the query and show us what has happened.
+
+
+###### order by random
+```
+CREATE TABLE t_random AS SELECT * FROM t_test ORDER BY random();  
+```
+add vacuum
+```
+VACUUM ANALYZE t_random;  
+```
+tablename attname correlation
+```
+SELECT tablename, attname, correlation FROM pg_stats WHERE tablename IN ('t_test', 't_random') ORDER BY 1, 2; 
+```
