@@ -81,3 +81,13 @@ tablename attname correlation
 ```
 SELECT tablename, attname, correlation FROM pg_stats WHERE tablename IN ('t_test', 't_random') ORDER BY 1, 2; 
 ```
+
+### Clustering tables
+```CLUSTER``` that allows us to rewrite a table in the desired order.
+Note:
+- The CLUSTER command will lock the table while it is running. You cannot insert or modify data while CLUSTER is running. This might not be acceptable on a production system.  
+
+example
+```
+CLUSTER t_random USING idx_random;  
+```
