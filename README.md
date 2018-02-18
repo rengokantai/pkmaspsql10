@@ -91,3 +91,97 @@ example
 ```
 CLUSTER t_random USING idx_random;  
 ```
+
+### Making use of index only scans
+index scan vs index only scan
+
+### Combined indexes
+
+### Adding functional indexes
+```
+CREATE INDEX idx_cos ON t_random (cos(id));
+```
+```
+SELECT age('2010-01-01 10:00:00'::timestamptz); 
+```
+
+### Reducing space consumption
+A b-tree will contain a pointer to each row in the table, and so it is certainly not free of charge.  
+To figure out how much space an index will need:  
+```
+\di+
+```
+###### Create partial index
+```
+CREATE INDEX idx_name ON t_test (name) WHERE name NOT IN ('hans', 'paul'); 
+\di+ idx_name 
+```
+### Adding data while indexing
+CREATE INDEX CONCURRENTLY.  
+Building the index will take a lot longer (usually at least twice as long), but you can use the table normally during index creation.
+```
+CREATE INDEX CONCURRENTLY idx_name ON t_test (name); 
+```
+### Creating new operators
+```
+CREATE OR REPLACE FUNCTION normalize_si(text) RETURNS text AS $$         
+BEGIN         
+RETURN substring($1, 9, 2) ||substring($1, 7, 2)||substring($1, 5, 2)||substring($1, 1, 4);
+END; $$
+LANGUAGE 'plpgsql' IMMUTABLE;
+```
+
+
+
+## 10. Making Sense of Backups and Replication
+### Understanding the transaction log
+Write Ahead Log (WAL) or xlog.
+
+### Looking at the transaction log
+```
+/var/lib/pgsql/10/data/pg_xlog 
+```
+### Understanding checkpoints
+Never touch the transaction log manually. 
+
+### Configuring for archiving
+Point-In-Time Recovery (PITR)
+- You will lose less data because you can restore to a certain point in time and not just to the fixed backup point
+- Restoring will be faster because indexes don't have to be created from scratch. They are just copied over and are ready to use
+```
+wal_level = replica    # used to be "hot_standby" in older versions for version prior 9.6 it is minimal
+max_wal_senders = 10   # at least 2, better at least 2
+```
+Basically, there are two means of transporting the WAL:
+- Using __pg_receivewal__ (up to 9.6 known as pg_receivexlog)
+- Using filesystem as a means to archive
+```
+mkdir /archive
+chown postgres.postgres archive
+```
+The following entries can be changed in the ```postgresql.conf``` file
+```
+archive_mode = on
+archive_command = 'cp %p /archive/%f'
+```
+
+
+
+
+
+
+
+## 13. Migrating to PostgreSQL
+```
+SELECT * FROM generate_series(1, 4) AS x,
+LATERAL (SELECT array_agg(y) FROM generate_series(1, x) AS y
+) AS z; 
+```
+```
+ x  | array_agg 
+----+----------- 
+ 1  | {1} 
+ 2  | {1,2} 
+ 3  | {1,2,3} 
+ 4  | {1,2,3,4} 
+ ```
