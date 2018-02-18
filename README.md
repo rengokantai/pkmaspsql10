@@ -165,7 +165,13 @@ archive_mode = on
 archive_command = 'cp %p /archive/%f'
 ```
 
+### Creating base backups
+```
+pg_basebackup -D /some_target_dir -h localhost --checkpoint=fast --wal-method=stream 
+```
 
+### Reducing the bandwidth of a backup
+### Replaying the transaction log
 
 
 
@@ -185,3 +191,4 @@ LATERAL (SELECT array_agg(y) FROM generate_series(1, x) AS y
  3  | {1,2,3} 
  4  | {1,2,3,4} 
  ```
+
